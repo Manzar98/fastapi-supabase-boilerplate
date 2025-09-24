@@ -1,38 +1,36 @@
 """
 FastAPI application entry point.
 """
-from fastapi import FastAPI, Request, status
+
+import logging
+from contextlib import asynccontextmanager
+from fastapi import FastAPI, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
-from contextlib import asynccontextmanager
-import logging
-import time
-
 from core.config import settings
 from core.exceptions import AppException, create_http_exception
 from middlewares.logger import LoggerMiddleware
-from middlewares.jwt_middleware import JWTMiddleware
 from api import auth
 
 # Configure logging
 logging.basicConfig(
     level=getattr(logging, settings.log_level.upper()),
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
+async def lifespan():
     """Application lifespan events."""
     # Startup
-    logger.info(f"Starting {settings.app_name} v{settings.app_version}")
-    logger.info(f"Environment: {settings.environment}")
-    logger.info(f"Debug mode: {settings.debug}")
-    
+    logger.info("Starting %s v%s", settings.app_name, settings.app_version)
+    logger.info("Environment: %s", settings.environment)
+    logger.info("Debug mode: %s", settings.debug)
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down application")
 
@@ -65,33 +63,30 @@ app.add_middleware(LoggerMiddleware)
 
 # Global exception handlers
 @app.exception_handler(AppException)
-async def app_exception_handler(request: Request, exc: AppException):
+async def app_exception_handler(exc: AppException):
     """Handle custom application exceptions."""
     return create_http_exception(exc)
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
+async def validation_exception_handler(exc: RequestValidationError):
     """Handle request validation errors."""
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={
-            "message": "Validation error",
-            "details": exc.errors()
-        }
+        content={"message": "Validation error", "details": exc.errors()},
     )
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(request: Request, exc: Exception):
+async def general_exception_handler(exc: Exception):
     """Handle general exceptions."""
-    logger.error(f"Unhandled exception: {str(exc)}", exc_info=True)
+    logger.error("Unhandled exception: %s", str(exc), exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "message": "Internal server error",
-            "details": "An unexpected error occurred"
-        }
+            "details": "An unexpected error occurred",
+        },
     )
 
 
@@ -103,7 +98,7 @@ async def health_check():
         "status": "healthy",
         "app_name": settings.app_name,
         "version": settings.app_version,
-        "environment": settings.environment
+        "environment": settings.environment,
     }
 
 
@@ -118,5 +113,7 @@ async def root():
     return {
         "message": f"Welcome to {settings.app_name}",
         "version": settings.app_version,
-        "docs_url": "/docs" if settings.debug else "Documentation not available in production"
+        "docs_url": (
+            "/docs" if settings.debug else "Documentation not available in production"
+        ),
     }

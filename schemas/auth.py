@@ -24,6 +24,12 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
     expires_in: int
 
+class LoginUserResponse(BaseModel):
+    """Login user response schema."""
+    username: str
+    email: str
+    full_name: str
+
 
 class UserResponse(BaseModel):
     """User response schema."""
