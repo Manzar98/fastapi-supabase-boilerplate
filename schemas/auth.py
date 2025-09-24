@@ -1,7 +1,6 @@
 """
 Authentication schemas for request/response models.
 """
-from typing import Optional
 from pydantic import BaseModel, EmailStr
 
 
@@ -15,7 +14,6 @@ class UserRegister(BaseModel):
     """User registration request schema."""
     email: EmailStr
     password: str
-    full_name: Optional[str] = None
 
 
 class TokenResponse(BaseModel):
@@ -28,14 +26,12 @@ class LoginUserResponse(BaseModel):
     """Login user response schema."""
     username: str
     email: str
-    full_name: str
 
 
 class UserResponse(BaseModel):
     """User response schema."""
     id: str
     email: str
-    full_name: Optional[str] = None
     created_at: str
     updated_at: str
 

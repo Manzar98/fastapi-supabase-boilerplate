@@ -9,7 +9,6 @@ from fastapi.security import HTTPBearer
 from jose import jwt
 from utils.supabase_client import get_supabase_client
 from schemas.auth import (
-    LoginUserResponse,
     UserLogin,
     UserRegister,
     TokenResponse,
@@ -76,7 +75,6 @@ async def login(user: UserLogin, supabase=Depends(get_supabase_client)):
             "email": response.user.email,
             "user_metadata": response.user.user_metadata,
             "app_metadata": response.user.app_metadata,
-            "role": response.user.app_metadata.get("role", "user"),
         }
 
         access_token = create_access_token(token_data)
@@ -85,12 +83,7 @@ async def login(user: UserLogin, supabase=Depends(get_supabase_client)):
         return TokenResponse(
             access_token=access_token,
             token_type="bearer",
-            expires_in=expires_in,
-            user=LoginUserResponse(
-                username=response.user.user_metadata.get("username"),
-                email=response.user.email,
-                full_name=response.user.user_metadata.get("full_name"),
-            ),
+            expires_in=expires_in
         )
 
     except Exception as e:
@@ -112,7 +105,6 @@ async def register(user: UserRegister, supabase=Depends(get_supabase_client)):
             {
                 "email": user.email,
                 "password": user.password,
-                "options": {"data": {"full_name": user.full_name}},
             }
         )
 
@@ -122,7 +114,6 @@ async def register(user: UserRegister, supabase=Depends(get_supabase_client)):
         return UserResponse(
             id=response.user.id,
             email=response.user.email,
-            full_name=user.full_name,
             created_at=response.user.created_at,
             updated_at=response.user.updated_at,
         )
@@ -160,7 +151,6 @@ async def get_current_user_info(current_user=Depends(get_current_user)):
     return UserResponse(
         id=current_user["id"],
         email=current_user["email"],
-        full_name=current_user.get("user_metadata", {}).get("full_name"),
         created_at=current_user["created_at"],
         updated_at=current_user["updated_at"],
     )
