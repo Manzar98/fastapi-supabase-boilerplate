@@ -1,0 +1,35 @@
+# FastAPI and ASGI server
+fastapi==0.117.1
+uvicorn[standard]==0.37.0
+
+# Database and ORM
+sqlalchemy==2.0.43
+psycopg[binary]==3.2.3
+
+# Supabase integration
+supabase==2.20.0
+
+# Authentication and security
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+python-multipart==0.0.12
+
+# Environment and configuration
+python-dotenv==1.1.1
+
+# HTTP client
+httpx==0.28.1
+
+# Data validation and serialization
+pydantic==2.11.9
+pydantic-settings==2.6.1
+
+# Testing
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1
+
+# Development tools
+black==24.10.0
+isort==5.13.2
+flake8==7.1.1
