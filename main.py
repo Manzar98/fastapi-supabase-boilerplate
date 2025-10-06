@@ -11,7 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from core.config import settings
 from core.exceptions import AppException, create_http_exception
 from middlewares.logger import LoggerMiddleware
-from api import auth
+from api import auth, user
 
 # Configure logging
 logging.basicConfig(
@@ -41,8 +41,8 @@ app = FastAPI(
     version=settings.app_version,
     debug=settings.debug,
     lifespan=lifespan,
-    docs_url="/docs" if settings.debug else None,
-    redoc_url="/redoc" if settings.debug else None,
+    docs_url="/docs",
+    redoc_url="/redoc",
 )
 
 # Add CORS middleware
@@ -69,7 +69,7 @@ async def app_exception_handler(exc: AppException):
 
 
 @app.exception_handler(RequestValidationError)
-async def validation_exception_handler(exc: RequestValidationError):
+async def validation_exception_handler(request, exc: RequestValidationError):
     """Handle request validation errors."""
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
@@ -78,7 +78,7 @@ async def validation_exception_handler(exc: RequestValidationError):
 
 
 @app.exception_handler(Exception)
-async def general_exception_handler(exc: Exception):
+async def general_exception_handler(request, exc: Exception):
     """Handle general exceptions."""
     logger.error("Unhandled exception: %s", str(exc), exc_info=True)
     return JSONResponse(
@@ -104,6 +104,7 @@ async def health_check():
 
 # Include API routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
+app.include_router(user.router, prefix="/user", tags=["User Profile"])
 
 
 # Root endpoint
@@ -113,7 +114,5 @@ async def root():
     return {
         "message": f"Welcome to {settings.app_name}",
         "version": settings.app_version,
-        "docs_url": (
-            "/docs" if settings.debug else "Documentation not available in production"
-        ),
+        "docs_url": "/docs"
     }

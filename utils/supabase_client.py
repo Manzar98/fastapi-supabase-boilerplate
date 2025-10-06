@@ -41,31 +41,3 @@ def get_supabase_admin_client() -> Client:
         settings.supabase_service_role_key,
     )
 
-
-def verify_with_supabase(token: str) -> dict:
-    """
-    Verify JWT token with Supabase (for double-checking user state).
-    """
-    try:
-        supabase = get_supabase_client()
-        response = supabase.auth.get_user(token)
-
-        if not response.user:
-            raise AuthenticationError("Invalid token")
-
-        return {
-            "id": response.user.id,
-            "email": response.user.email,
-            "user_metadata": response.user.user_metadata,
-            "app_metadata": response.user.app_metadata,
-            "created_at": response.user.created_at,
-            "updated_at": response.user.updated_at,
-            "username": response.user.user_metadata.get("username", "user"),
-        }
-
-    except Exception as e:
-        logger.error("Supabase verification error: %s", str(e))
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Supabase verification failed",
-        ) from e
