@@ -3,9 +3,10 @@ Authentication API routes.
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer
 from utils.supabase_client import get_supabase_client
+from utils.audit_decorator import audit_action
 from schemas.auth import (
     LoginUserResponse,
     RegisterUserResponse,
@@ -25,7 +26,8 @@ logger = logging.getLogger(__name__)
 
 
 @router.post("/login", response_model=TokenResponse)
-async def login(user: UserLogin, supabase=Depends(get_supabase_client)):
+@audit_action("LOGIN", "auth")
+async def login(user: UserLogin, request: Request, supabase=Depends(get_supabase_client)):  # noqa: ARG001
     """
     Authenticate user and return Supabase access token.
     """
@@ -63,12 +65,12 @@ async def login(user: UserLogin, supabase=Depends(get_supabase_client)):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-async def refresh_token(refresh_token: str, supabase=Depends(get_supabase_client)):
+async def refresh_token(token: str, supabase=Depends(get_supabase_client)):
     """
     Refresh access token using refresh token.
     """
     try:
-        response = supabase.auth.refresh_session(refresh_token)
+        response = supabase.auth.refresh_session(token)
 
         if not response.session:
             raise AuthenticationError("Invalid refresh token")
@@ -94,7 +96,8 @@ async def refresh_token(refresh_token: str, supabase=Depends(get_supabase_client
 
 
 @router.post("/register", response_model=RegisterUserResponse)
-async def register(user: UserRegister, supabase=Depends(get_supabase_client)):
+@audit_action("REGISTER", "user")
+async def register(user: UserRegister, request: Request, supabase=Depends(get_supabase_client)):  # noqa: ARG001
     """
     Register a new user.
     """
@@ -166,8 +169,11 @@ async def register(user: UserRegister, supabase=Depends(get_supabase_client)):
 
 
 @router.post("/logout")
+@audit_action("LOGOUT", "auth")
 async def logout(
-    current_user=Depends(get_current_user), supabase=Depends(get_supabase_client)
+    request: Request,  # noqa: ARG001
+    current_user=Depends(get_current_user),  # noqa: ARG001
+    supabase=Depends(get_supabase_client)
 ):
     """
     Logout current user and revoke session.

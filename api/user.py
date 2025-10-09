@@ -3,8 +3,9 @@ User profile API routes.
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from utils.supabase_client import get_supabase_client
+from utils.audit_decorator import audit_action
 from schemas.auth import (
     UserProfileResponse,
     UserProfileUpdate,
@@ -98,8 +99,10 @@ async def get_user_profile(
 
 
 @router.put("/profile", response_model=UserProfileUpdateResponse)
+@audit_action("UPDATE", "user")
 async def update_user_profile(
     profile_update: UserProfileUpdate,
+    request: Request,  # noqa: ARG001
     current_user=Depends(get_current_user),
     supabase=Depends(get_supabase_client),
 ):
@@ -201,7 +204,10 @@ async def update_user_profile(
 
 
 @router.delete("/", response_model=DeleteUserResponse)
+@audit_action("DELETE", "user")
 async def delete_user(
+    request: Request,  # noqa: ARG001
+    current_user=Depends(get_current_user),  # noqa: ARG001
     supabase=Depends(get_supabase_client)
 ):
     """

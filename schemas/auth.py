@@ -84,7 +84,7 @@ class UserProfileUpdateResponse(BaseModel):
     user: UserProfileResponse
 
 
-class DeleteUser(BaseModel):
+class DeleteUserResponse(BaseModel):
     """Delete user response schema."""
     status: str
     message: Optional[str] = None
