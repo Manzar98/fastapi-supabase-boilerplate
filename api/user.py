@@ -9,6 +9,7 @@ from schemas.auth import (
     UserProfileResponse,
     UserProfileUpdate,
     UserProfileUpdateResponse,
+    DeleteUserResponse,
 )
 from core.dependencies import get_current_user
 from core.exceptions import (
@@ -26,14 +27,14 @@ logger = logging.getLogger(__name__)
 
 @router.get("/profile", response_model=UserProfileResponse)
 async def get_user_profile(
-    current_user= Depends(get_current_user), 
-    supabase=Depends(get_supabase_client)):
+    current_user=Depends(get_current_user), supabase=Depends(get_supabase_client)
+):
     """
     Get current user profile information
 
     Returns:
     UserProfileResponse: User profile information
-    
+
     Raises:
     AuthenticationError: If user is not authenticated
     NotFoundError: If user profile is not found
@@ -42,11 +43,11 @@ async def get_user_profile(
 
     """
     try:
-        response = supabase.auth.get_user() 
+        response = supabase.auth.get_user()
 
         if not response.user:
             raise NotFoundError("User profile not found")
-        
+
         user_metadata = response.user.user_metadata or {}
 
         return UserProfileResponse(
@@ -100,25 +101,25 @@ async def get_user_profile(
 async def update_user_profile(
     profile_update: UserProfileUpdate,
     current_user=Depends(get_current_user),
-    supabase=Depends(get_supabase_client)
+    supabase=Depends(get_supabase_client),
 ):
-    """ 
-        Update current user profile information
+    """
+    Update current user profile information
 
-            Args:
-            profile_update: Profile update data
+        Args:
+        profile_update: Profile update data
 
-        Returns:
-        UserProfileUpdateResponse: User profile update information
+    Returns:
+    UserProfileUpdateResponse: User profile update information
 
-        Raises:
-        AuthenticationError: If user is not authenticated
-        ValidationError: If there is an error updating user profile
-        ExternalServiceError: If there is an error updating user profile
-        HTTPException: If there is an error in the request
+    Raises:
+    AuthenticationError: If user is not authenticated
+    ValidationError: If there is an error updating user profile
+    ExternalServiceError: If there is an error updating user profile
+    HTTPException: If there is an error in the request
     """
     try:
-        update_data= {}
+        update_data = {}
         if profile_update.username:
             update_data["username"] = profile_update.username
         if profile_update.full_name:
@@ -196,4 +197,27 @@ async def update_user_profile(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Failed to update user profile",
+        ) from e
+
+
+@router.delete("/", response_model=DeleteUserResponse)
+async def delete_user(
+    supabase=Depends(get_supabase_client)
+):
+    """
+    Delete current user account
+    """
+    try:
+        response = supabase.auth.delete_user()
+
+        if not response.user:
+            raise ExternalServiceError("Failed to delete user")
+
+        return DeleteUserResponse(status="success", message="User deleted successfully")
+
+    except Exception as e:
+        logger.error("Delete user error: %s", str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to delete user",
         ) from e
