@@ -39,6 +39,10 @@ class Settings(BaseModel):
     # App URL
     app_url: Optional[str] = os.getenv("BASE_URL")
 
+
+    # Sentry
+    sentry_dsn: Optional[str] = os.getenv("SENTRY_DSN")
+
     # Logging
     log_level: str = "INFO"
 

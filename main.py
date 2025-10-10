@@ -11,7 +11,9 @@ from fastapi.exceptions import RequestValidationError
 from core.config import settings
 from core.exceptions import AppException, create_http_exception
 from middlewares.logger import LoggerMiddleware
+from middlewares.sentry_middleware import SentryMiddleware
 from api import auth, user
+
 
 # Configure logging
 logging.basicConfig(
@@ -48,11 +50,15 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
+    
     allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Add Sentry middleware (should be early in the stack)
+app.add_middleware(SentryMiddleware)
 
 # Add custom logger middleware
 app.add_middleware(LoggerMiddleware)
@@ -80,13 +86,18 @@ async def validation_exception_handler(request, exc: RequestValidationError):
 @app.exception_handler(Exception)
 async def general_exception_handler(request, exc: Exception):
     """Handle general exceptions."""
+    # Get request ID if available
+    request_id = getattr(request.state, "request_id", "unknown")
+    
     logger.error("Unhandled exception: %s", str(exc), exc_info=True)
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "message": "Internal server error",
             "details": "An unexpected error occurred",
+            "request_id": request_id,
         },
+        headers={"X-Request-ID": request_id}
     )
 
 
@@ -101,6 +112,12 @@ async def health_check():
         "environment": settings.environment,
     }
 
+@app.get("/sentry-debug")
+async def trigger_error():
+    """Trigger a sentry error for testing."""
+    # This will be caught by the Sentry middleware
+    _ = 1 / 0  # This will raise ZeroDivisionError
+
 
 # Include API routers
 app.include_router(auth.router, prefix="/auth", tags=["Authentication"])
@@ -114,5 +131,5 @@ async def root():
     return {
         "message": f"Welcome to {settings.app_name}",
         "version": settings.app_version,
-        "docs_url": "/docs"
+        "docs_url": "/docs",
     }
