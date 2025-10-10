@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
-async def lifespan():
+async def lifespan(app):
     """Application lifespan events."""
     # Startup
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
@@ -69,9 +69,9 @@ app.add_middleware(LoggerMiddleware)
 
 # Global exception handlers
 @app.exception_handler(AppException)
-async def app_exception_handler(exc: AppException):
+async def app_exception_handler(request, exc: AppException):
     """Handle custom application exceptions."""
-    return create_http_exception(exc)
+    raise create_http_exception(exc)
 
 
 @app.exception_handler(RequestValidationError)
