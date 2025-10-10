@@ -4,13 +4,14 @@ JWT middleware for FastAPI with local verification.
 
 import logging
 from datetime import datetime, timezone
+
 from fastapi import HTTPException, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer
-from jose import jwt, JWTError
+from jose import JWTError, jwt
+
 from core.config import settings
 from core.exceptions import AuthenticationError, create_http_exception
-
 
 logger = logging.getLogger(__name__)
 security = HTTPBearer()

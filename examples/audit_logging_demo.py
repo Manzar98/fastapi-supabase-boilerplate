@@ -7,8 +7,10 @@ Run this script to see the audit logging in action.
 
 import asyncio
 import logging
-from fastapi import FastAPI, Request, Depends
+
+from fastapi import Depends, FastAPI, Request
 from fastapi.testclient import TestClient
+
 from utils.audit_decorator import audit_action
 from utils.audit_logger import log_audit_action
 
@@ -19,13 +21,14 @@ logger = logging.getLogger(__name__)
 # Create a simple FastAPI app for demonstration
 app = FastAPI(title="Audit Logging Demo")
 
+
 # Example route with audit logging
 @app.post("/example/create")
 @audit_action("CREATE", "example")
 async def create_example(
     data: dict,
     request: Request,  # noqa: ARG001
-    current_user: dict = None  # Simulated user
+    current_user: dict = None,  # Simulated user
 ):
     """Example route that creates something."""
     logger.info("Creating example with data: %s", data)
@@ -37,7 +40,7 @@ async def create_example(
 async def delete_example(
     example_id: str,
     request: Request,  # noqa: ARG001
-    current_user: dict = None  # Simulated user
+    current_user: dict = None,  # Simulated user
 ):
     """Example route that deletes something."""
     logger.info("Deleting example with ID: %s", example_id)
@@ -49,7 +52,7 @@ async def delete_example(
 async def get_example(
     example_id: str,
     request: Request,  # noqa: ARG001
-    current_user: dict = None  # Simulated user
+    current_user: dict = None,  # Simulated user
 ):
     """Example route that reads something."""
     logger.info("Reading example with ID: %s", example_id)
@@ -66,7 +69,7 @@ async def direct_audit_example():
         resource_id="example-456",
         ip_address="192.168.1.1",
         user_agent="Mozilla/5.0 (Example Browser)",
-        metadata={"custom_field": "custom_value", "status_code": 200}
+        metadata={"custom_field": "custom_value", "status_code": 200},
     )
     logger.info("Direct audit log created")
 
@@ -74,20 +77,20 @@ async def direct_audit_example():
 if __name__ == "__main__":
     # Test the direct audit logging
     asyncio.run(direct_audit_example())
-    
+
     # Test the FastAPI routes
     client = TestClient(app)
-    
+
     # Test create route
     response = client.post("/example/create", json={"name": "test", "value": 123})
     logger.info("Create response: %s", response.json())
-    
+
     # Test delete route
     response = client.delete("/example/test-id")
     logger.info("Delete response: %s", response.json())
-    
+
     # Test read route
     response = client.get("/example/test-id")
     logger.info("Read response: %s", response.json())
-    
+
     logger.info("Audit logging demo completed!")

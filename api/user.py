@@ -3,21 +3,16 @@ User profile API routes.
 """
 
 import logging
+
 from fastapi import APIRouter, Depends, Request
-from utils.supabase_client import get_supabase_client
-from utils.audit_decorator import audit_action
-from schemas.auth import (
-    UserProfileResponse,
-    UserProfileUpdate,
-    UserProfileUpdateResponse,
-    DeleteUserResponse,
-)
+
 from core.dependencies import get_current_user
-from core.exceptions import (
-    ValidationError,
-    NotFoundError,
-    ExternalServiceError,
-)
+from core.exceptions import (ExternalServiceError, NotFoundError,
+                             ValidationError)
+from schemas.auth import (DeleteUserResponse, UserProfileResponse,
+                          UserProfileUpdate, UserProfileUpdateResponse)
+from utils.audit_decorator import audit_action
+from utils.supabase_client import get_supabase_client
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -89,9 +84,7 @@ async def update_user_profile(
         raise ValidationError("No profile data provided for update")
 
     # Update user metadata in Supabase Auth
-    response = supabase.auth.update_user({
-        "data": update_data
-    })
+    response = supabase.auth.update_user({"data": update_data})
 
     if not response.user:
         raise ExternalServiceError("Failed to update profile")
@@ -113,7 +106,7 @@ async def update_user_profile(
 async def delete_user(
     request: Request,  # noqa: ARG001
     current_user=Depends(get_current_user),  # noqa: ARG001
-    supabase=Depends(get_supabase_client)
+    supabase=Depends(get_supabase_client),
 ):
     """
     Delete current user account

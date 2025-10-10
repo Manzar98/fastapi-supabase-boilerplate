@@ -5,8 +5,9 @@ Application configuration settings.
 import os
 import warnings
 from typing import List, Optional
-from pydantic import BaseModel, field_validator
+
 from dotenv import load_dotenv
+from pydantic import BaseModel, field_validator
 
 # Load environment variables from .env
 load_dotenv()
@@ -38,7 +39,6 @@ class Settings(BaseModel):
 
     # App URL
     app_url: Optional[str] = os.getenv("BASE_URL")
-
 
     # Sentry
     sentry_dsn: Optional[str] = os.getenv("SENTRY_DSN")

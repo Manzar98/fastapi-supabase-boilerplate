@@ -3,8 +3,10 @@ Email handling utilities.
 """
 
 import logging
-from typing import List, Union, Optional
+from typing import List, Optional, Union
+
 import resend
+
 from core.config import settings
 from utils.template_renderer import render_email_template
 
@@ -12,11 +14,8 @@ logger = logging.getLogger(__name__)
 
 resend.api_key = settings.resend_api_key
 
-def send_email(
-    to: Union[str, List[str]],
-    subject: str,
-    body: str
-) -> Optional[dict]:
+
+def send_email(to: Union[str, List[str]], subject: str, body: str) -> Optional[dict]:
     """
     Send an email using Resend.
 
@@ -48,10 +47,7 @@ def send_email(
 
 
 def send_templated_email(
-    to: Union[str, List[str]],
-    subject: str,
-    template_name: str,
-    **template_context: any
+    to: Union[str, List[str]], subject: str, template_name: str, **template_context: any
 ) -> Optional[dict]:
     """
     Send an email using a Jinja2 template.
@@ -68,7 +64,7 @@ def send_templated_email(
     try:
         # Render the template
         html_body = render_email_template(template_name, **template_context)
-        
+
         # Send the email using the existing send_email function
         return send_email(to, subject, html_body)
     except Exception as e:

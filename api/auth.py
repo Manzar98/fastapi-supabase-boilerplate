@@ -3,24 +3,20 @@ Authentication API routes.
 """
 
 import logging
+
 from fastapi import APIRouter, Depends
 from fastapi.security import HTTPBearer
+
 from core.config import settings
 from core.dependencies import get_current_user
 from core.exceptions import AuthenticationError, ValidationError
-from utils.email_handler import send_templated_email
-from utils.supabase_client import get_supabase_admin_client, get_supabase_client
+from schemas.auth import (LoginUserResponse, PasswordReset,
+                          PasswordResetConfirm, RegisterUserResponse,
+                          TokenResponse, UserLogin, UserRegister, UserResponse)
 from utils.audit_decorator import audit_action
-from schemas.auth import (
-    LoginUserResponse,
-    RegisterUserResponse,
-    UserLogin,
-    UserRegister,
-    TokenResponse,
-    UserResponse,
-    PasswordReset,
-    PasswordResetConfirm,
-)
+from utils.email_handler import send_templated_email
+from utils.supabase_client import (get_supabase_admin_client,
+                                   get_supabase_client)
 
 router = APIRouter()
 security = HTTPBearer()
@@ -133,14 +129,10 @@ async def register(
             full_name=user.full_name,
             username=user.username,
             created_at=(
-                response.user.created_at.isoformat()
-                if response.user.created_at
-                else ""
+                response.user.created_at.isoformat() if response.user.created_at else ""
             ),
             updated_at=(
-                response.user.updated_at.isoformat()
-                if response.user.updated_at
-                else ""
+                response.user.updated_at.isoformat() if response.user.updated_at else ""
             ),
         ),
     )

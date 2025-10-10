@@ -1,12 +1,15 @@
 """
 Dependency injection for FastAPI.
 """
+
 import logging
 from typing import Optional
+
 from fastapi import Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from utils.supabase_client import get_supabase_client
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+
 from core.exceptions import AuthenticationError, create_http_exception
+from utils.supabase_client import get_supabase_client
 
 # Security scheme
 security = HTTPBearer()
@@ -14,7 +17,7 @@ security = HTTPBearer()
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
-    supabase=Depends(get_supabase_client)
+    supabase=Depends(get_supabase_client),
 ) -> dict:
     """
     Get current authenticated user using Supabase access token.
@@ -31,7 +34,7 @@ async def get_current_user(
     """
     try:
         token = credentials.credentials
-        
+
         # Verify token with Supabase (real-time validation)
         response = supabase.auth.get_user(token)
 
@@ -66,7 +69,7 @@ async def get_current_user(
 
 async def get_optional_current_user(
     credentials: Optional[HTTPAuthorizationCredentials] = Depends(security),
-    supabase=Depends(get_supabase_client)
+    supabase=Depends(get_supabase_client),
 ) -> Optional[dict]:
     """
     Get current user if authenticated, otherwise return None.

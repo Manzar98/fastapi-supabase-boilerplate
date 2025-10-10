@@ -5,14 +5,16 @@ Sentry middleware for FastAPI error monitoring and request context capture.
 import logging
 import time
 import uuid
-from typing import Dict, Any, Optional
+from typing import Any, Dict, Optional
+
+import sentry_sdk
 from fastapi import Request, Response
 from fastapi.responses import JSONResponse
-from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.types import ASGIApp
-import sentry_sdk
 from sentry_sdk.integrations.fastapi import FastApiIntegration
 from sentry_sdk.integrations.starlette import StarletteIntegration
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.types import ASGIApp
+
 from core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -51,7 +53,9 @@ class SentryMiddleware(BaseHTTPMiddleware):
             before_send=self._before_send,
         )
 
-    def _before_send(self, event: Dict[str, Any], hint: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+    def _before_send(
+        self, event: Dict[str, Any], hint: Dict[str, Any]
+    ) -> Optional[Dict[str, Any]]:
         """
         Filter and enhance events before sending to Sentry.
         """
@@ -67,11 +71,13 @@ class SentryMiddleware(BaseHTTPMiddleware):
                 _ = exc_tb
 
         # Add custom tags
-        event.setdefault("tags", {}).update({
-            "app_name": settings.app_name,
-            "app_version": settings.app_version,
-            "environment": settings.environment,
-        })
+        event.setdefault("tags", {}).update(
+            {
+                "app_name": settings.app_name,
+                "app_version": settings.app_version,
+                "environment": settings.environment,
+            }
+        )
 
         return event
 
@@ -89,14 +95,17 @@ class SentryMiddleware(BaseHTTPMiddleware):
         # Set up Sentry context for this request
         with sentry_sdk.configure_scope() as scope:
             # Add request context
-            scope.set_context("request", {
-                "url": str(request.url),
-                "method": request.method,
-                "headers": dict(request.headers),
-                "query_params": dict(request.query_params),
-                "path_params": getattr(request, "path_params", {}),
-                "request_id": request_id,
-            })
+            scope.set_context(
+                "request",
+                {
+                    "url": str(request.url),
+                    "method": request.method,
+                    "headers": dict(request.headers),
+                    "query_params": dict(request.query_params),
+                    "path_params": getattr(request, "path_params", {}),
+                    "request_id": request_id,
+                },
+            )
 
             # Add user context if available
             user_info = await self._extract_user_context(request)
@@ -111,15 +120,18 @@ class SentryMiddleware(BaseHTTPMiddleware):
             try:
                 # Process the request
                 response = await call_next(request)
-                
+
                 # Calculate processing time
                 process_time = time.time() - start_time
-                
+
                 # Add performance context
-                scope.set_context("performance", {
-                    "process_time": process_time,
-                    "status_code": response.status_code,
-                })
+                scope.set_context(
+                    "performance",
+                    {
+                        "process_time": process_time,
+                        "status_code": response.status_code,
+                    },
+                )
 
                 # Add response headers for debugging
                 response.headers["X-Request-ID"] = request_id
@@ -130,7 +142,7 @@ class SentryMiddleware(BaseHTTPMiddleware):
             except Exception as exc:
                 # Capture the exception with full context
                 sentry_sdk.capture_exception(exc)
-                
+
                 # Log the error locally
                 logger.error(
                     "Unhandled exception in request %s %s: %s",
@@ -144,7 +156,7 @@ class SentryMiddleware(BaseHTTPMiddleware):
                         "path": request.url.path,
                         "user_agent": request.headers.get("user-agent"),
                         "client_ip": self._get_client_ip(request),
-                    }
+                    },
                 )
 
                 # Return a proper JSON error response
@@ -155,7 +167,7 @@ class SentryMiddleware(BaseHTTPMiddleware):
                         "details": "An unexpected error occurred",
                         "request_id": request_id,
                     },
-                    headers={"X-Request-ID": request_id}
+                    headers={"X-Request-ID": request_id},
                 )
 
     async def _extract_user_context(self, request: Request) -> Optional[Dict[str, Any]]:
@@ -211,7 +223,9 @@ class SentryErrorHandler:
     """
 
     @staticmethod
-    def capture_exception(exc: Exception, request: Optional[Request] = None, **context) -> None:
+    def capture_exception(
+        exc: Exception, request: Optional[Request] = None, **context
+    ) -> None:
         """
         Capture an exception with additional context.
         """
@@ -222,11 +236,14 @@ class SentryErrorHandler:
 
             # Add request context if available
             if request:
-                scope.set_context("request", {
-                    "url": str(request.url),
-                    "method": request.method,
-                    "headers": dict(request.headers),
-                })
+                scope.set_context(
+                    "request",
+                    {
+                        "url": str(request.url),
+                        "method": request.method,
+                        "headers": dict(request.headers),
+                    },
+                )
 
         sentry_sdk.capture_exception(exc)
 
@@ -242,13 +259,12 @@ class SentryErrorHandler:
         sentry_sdk.capture_message(message, level=level)
 
     @staticmethod
-    def add_breadcrumb(message: str, category: str = "custom", level: str = "info", **data) -> None:
+    def add_breadcrumb(
+        message: str, category: str = "custom", level: str = "info", **data
+    ) -> None:
         """
         Add a breadcrumb for debugging.
         """
         sentry_sdk.add_breadcrumb(
-            message=message,
-            category=category,
-            level=level,
-            data=data
+            message=message, category=category, level=level, data=data
         )

@@ -7,14 +7,15 @@ import os
 # Disable Sentry before any imports
 os.environ["SENTRY_DSN"] = ""
 
-import pytest
-from unittest.mock import Mock, patch
-from fastapi.testclient import TestClient
 from datetime import datetime
+from unittest.mock import Mock, patch
 
+import pytest
+from fastapi.testclient import TestClient
+
+from core.dependencies import get_current_user
 from main import app
 from utils.supabase_client import get_supabase_client
-from core.dependencies import get_current_user
 
 # Mock the audit decorator globally
 with patch("utils.audit_decorator.audit_action") as mock_audit:

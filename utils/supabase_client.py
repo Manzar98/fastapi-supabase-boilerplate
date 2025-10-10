@@ -1,10 +1,13 @@
 """
 Supabase client utility.
 """
+
 import logging
 from functools import lru_cache
-from supabase import create_client, Client
+
 from fastapi import HTTPException, status
+from supabase import Client, create_client
+
 from core.config import settings
 from core.exceptions import AuthenticationError
 
@@ -19,13 +22,15 @@ def get_supabase_client() -> Client:
     try:
         # Debug: Print the values being used
         print(f"DEBUG: SUPABASE_URL = {settings.supabase_url}")
-        print(f"DEBUG: SUPABASE_KEY = {settings.supabase_key[:10] if settings.supabase_key else None}...")
-        
+        print(
+            f"DEBUG: SUPABASE_KEY = {settings.supabase_key[:10] if settings.supabase_key else None}..."
+        )
+
         if not settings.supabase_url:
             raise ValueError("SUPABASE_URL is not configured")
         if not settings.supabase_key:
             raise ValueError("SUPABASE_KEY is not configured")
-            
+
         client = create_client(
             settings.supabase_url,
             settings.supabase_key,
@@ -47,10 +52,11 @@ def get_supabase_admin_client() -> Client:
 
     # Debug: Print the values being used
     print(f"DEBUG: SUPABASE_URL = {settings.supabase_url}")
-    print(f"DEBUG: SUPABASE_SERVICE_ROLE_KEY = {settings.supabase_service_role_key[:10] if settings.supabase_service_role_key else None}...")
+    print(
+        f"DEBUG: SUPABASE_SERVICE_ROLE_KEY = {settings.supabase_service_role_key[:10] if settings.supabase_service_role_key else None}..."
+    )
 
     return create_client(
         settings.supabase_url,
         settings.supabase_service_role_key,
     )
-
