@@ -133,7 +133,10 @@ async def update_user_profile(
         if not update_data:
             raise ValidationError("No profile data provided for update")
 
-        response = supabase.auth.update_user(update_data)
+        # Update user metadata in Supabase Auth
+        response = supabase.auth.update_user({
+            "data": update_data
+        })
 
         if not response.user:
             raise ExternalServiceError("Failed to update profile")

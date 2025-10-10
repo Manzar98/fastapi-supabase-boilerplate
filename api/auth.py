@@ -3,9 +3,13 @@ Authentication API routes.
 """
 
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status, Request
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import HTTPBearer
-from utils.supabase_client import get_supabase_client
+from core.config import settings
+from core.dependencies import get_current_user
+from core.exceptions import AuthenticationError, ValidationError, create_http_exception
+from utils.email_handler import send_templated_email
+from utils.supabase_client import get_supabase_admin_client, get_supabase_client
 from utils.audit_decorator import audit_action
 from schemas.auth import (
     LoginUserResponse,
@@ -17,8 +21,6 @@ from schemas.auth import (
     PasswordReset,
     PasswordResetConfirm,
 )
-from core.dependencies import get_current_user
-from core.exceptions import AuthenticationError, ValidationError, create_http_exception
 
 router = APIRouter()
 security = HTTPBearer()
@@ -27,7 +29,7 @@ logger = logging.getLogger(__name__)
 
 @router.post("/login", response_model=TokenResponse)
 @audit_action("LOGIN", "auth")
-async def login(user: UserLogin, request: Request, supabase=Depends(get_supabase_client)):  # noqa: ARG001
+async def login(user: UserLogin, supabase=Depends(get_supabase_client)):
     """
     Authenticate user and return Supabase access token.
     """
@@ -97,7 +99,9 @@ async def refresh_token(token: str, supabase=Depends(get_supabase_client)):
 
 @router.post("/register", response_model=RegisterUserResponse)
 @audit_action("REGISTER", "user")
-async def register(user: UserRegister, request: Request, supabase=Depends(get_supabase_client)):  # noqa: ARG001
+async def register(
+    user: UserRegister, supabase=Depends(get_supabase_client)
+):  # noqa: ARG001
     """
     Register a new user.
     """
@@ -171,9 +175,7 @@ async def register(user: UserRegister, request: Request, supabase=Depends(get_su
 @router.post("/logout")
 @audit_action("LOGOUT", "auth")
 async def logout(
-    request: Request,  # noqa: ARG001
-    current_user=Depends(get_current_user),  # noqa: ARG001
-    supabase=Depends(get_supabase_client)
+    supabase=Depends(get_supabase_client),
 ):
     """
     Logout current user and revoke session.
@@ -211,13 +213,37 @@ async def get_current_user_info(current_user=Depends(get_current_user)):
 
 @router.post("/forgot-password")
 async def forgot_password(
-    password_reset: PasswordReset, supabase=Depends(get_supabase_client)
+    password_reset: PasswordReset, supabase=Depends(get_supabase_admin_client)
 ):
     """
     Send password reset email.
     """
     try:
-        supabase.auth.reset_password_email(password_reset.email)
+
+        response = supabase.auth.admin.generate_link(
+            {
+                "type": "recovery",
+                "email": password_reset.email,
+                "options": {"emailRedirectTo": f"{settings.app_url}/reset-password"},
+            }
+        )
+        if (
+            not response
+            or not hasattr(response, "properties")
+            or not response.properties.action_link
+        ):
+            raise ValidationError("Failed to send password reset email")
+
+        reset_link = response.properties.action_link
+
+        # Send templated email
+        send_templated_email(
+            to=password_reset.email,
+            subject="Password Reset",
+            template_name="reset_password.html",
+            reset_link=reset_link,
+        )
+
         return {"message": "Password reset email sent"}
     except Exception as e:
         logger.error("Password reset error: %s", str(e))

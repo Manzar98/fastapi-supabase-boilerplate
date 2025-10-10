@@ -32,6 +32,13 @@ class Settings(BaseModel):
     # ✅ CORS — now loaded from .env
     cors_origins: List[str] = os.getenv("CORS_ORIGINS", "")
 
+    # Resend
+    resend_api_key: Optional[str] = os.getenv("RESEND_API_KEY")
+    resend_from_email: Optional[str] = os.getenv("RESEND_FROM_EMAIL")
+
+    # App URL
+    app_url: Optional[str] = os.getenv("BASE_URL")
+
     # Logging
     log_level: str = "INFO"
 
