@@ -5,7 +5,7 @@ This project includes a comprehensive CI/CD pipeline using GitHub Actions that a
 ## Workflows
 
 ### 1. Test Suite (`test.yml`)
-**Triggers:** Push to `main`/`develop`, Pull requests to `main`
+**Triggers:** Push to `main`/`develop`/`without-jwt`, Pull requests to `main`/`without-jwt`
 
 **What it does:**
 - Runs all pytest tests with verbose output
@@ -19,7 +19,7 @@ This project includes a comprehensive CI/CD pipeline using GitHub Actions that a
 - Fails fast on test failures
 
 ### 2. Code Quality (`code-quality.yml`)
-**Triggers:** Push to `main`/`develop`, Pull requests to `main`
+**Triggers:** Push to `main`/`develop`/`without-jwt`, Pull requests to `main`/`without-jwt`
 
 **What it does:**
 - Runs Black code formatter checks
@@ -33,13 +33,13 @@ This project includes a comprehensive CI/CD pipeline using GitHub Actions that a
 - Validates code style and complexity
 
 ### 3. Full CI/CD Pipeline (`ci.yml`)
-**Triggers:** Push to `main`/`develop`, Pull requests to `main`
+**Triggers:** Push to `main`/`develop`/`without-jwt`, Pull requests to `main`/`without-jwt`
 
 **What it does:**
 - Runs tests on multiple Python versions (3.11, 3.12, 3.13)
 - Performs security checks with Safety and Bandit
 - Builds and validates the application
-- Deploys to staging (develop branch)
+- Deploys to staging (develop/without-jwt branches)
 - Deploys to production (main branch)
 
 **Key features:**
@@ -48,7 +48,7 @@ This project includes a comprehensive CI/CD pipeline using GitHub Actions that a
 - Automated deployment to different environments
 
 ### 4. Deployment (`deploy.yml`)
-**Triggers:** Push to `main`, Manual trigger
+**Triggers:** Push to `main`/`without-jwt`, Manual trigger
 
 **What it does:**
 - Runs tests before deployment

@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, without-jwt ]
   workflow_dispatch:
     # Allow manual triggering
 

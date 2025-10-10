@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, without-jwt ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, without-jwt ]
 
 jobs:
   test:
@@ -131,7 +131,7 @@ jobs:
   deploy-staging:
     runs-on: ubuntu-latest
     needs: [ test, security, build ]
-    if: github.ref == 'refs/heads/develop'
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/without-jwt'
 
     steps:
     - name: Checkout code
