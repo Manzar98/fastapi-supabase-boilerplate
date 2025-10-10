@@ -1,0 +1,50 @@
+name: Deploy
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+    # Allow manual triggering
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production # This will require manual approval
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.13
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.13'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests before deployment
+      run: |
+        pytest tests/ -v --tb=short
+
+    - name: Build Docker image (example)
+      run: |
+        echo "Building Docker image..."
+        # docker build -t your-app:latest .
+
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production..."
+        # Add your deployment commands here
+        # Examples:
+        # - Deploy to cloud provider (AWS, GCP, Azure)
+        # - Deploy to VPS using SSH
+        # - Deploy using Docker Compose
+        # - Deploy using Kubernetes
+
+    - name: Health check
+      run: |
+        echo "Running health check..."
+        # curl -f http://your-app-url/health || exit 1

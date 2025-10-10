@@ -1,5 +1,9 @@
 # FastAPI Supabase Boilerplate
 
+[![CI/CD Pipeline](https://github.com/your-username/fastapi-supabase-boilerplate/workflows/Test%20Suite/badge.svg)](https://github.com/your-username/fastapi-supabase-boilerplate/actions)
+[![Code Quality](https://github.com/your-username/fastapi-supabase-boilerplate/workflows/Code%20Quality/badge.svg)](https://github.com/your-username/fastapi-supabase-boilerplate/actions)
+[![Test Coverage](https://codecov.io/gh/your-username/fastapi-supabase-boilerplate/branch/main/graph/badge.svg)](https://codecov.io/gh/your-username/fastapi-supabase-boilerplate)
+
 A production-ready FastAPI boilerplate with Supabase integration, JWT authentication, and clean architecture.
 
 ## Features
